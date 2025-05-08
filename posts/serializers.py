@@ -2,7 +2,7 @@ import os
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Post
+from .models import Post, Comment
 
 User = get_user_model()
 
@@ -37,7 +37,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(serializers.ModelSerializer):
-    # comments = serializers.SerializerMethodField(read_only=True)
+    comments = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Post
@@ -47,14 +47,18 @@ class PostListSerializer(serializers.ModelSerializer):
             "author",
             "image",
             "description",
-            # "comments",
+            "comments",
         ]
+
+    def get_comments(self, obj):
+        qs = Comment.objects.filter(parent=obj).count()
+        return qs
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
     slug = serializers.SerializerMethodField(read_only=True)
     author = serializers.PrimaryKeyRelatedField(read_only=True)
-    # comments = serializers.SerializerMethodField(read_only=True)
+    comments = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Post
@@ -68,8 +72,36 @@ class PostDetailSerializer(serializers.ModelSerializer):
             "image",
             "created_at",
             "updated_at",
-            # "comments",
+            "comments",
         ]
 
     def get_slug(self, obj):
         return obj.slug
+
+    def get_comments(self, obj):
+        qs = Comment.objects.filter(parent=obj)
+        try:
+            serializer = CommentSerializer(qs, many=True)
+        except Exception as e:
+            print(e)
+        return serializer.data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = [
+            "id",
+            "parent",
+            "author",
+            "body",
+            "created_at",
+        ]
+
+
+class CommentCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = [
+            "body",
+        ]
