@@ -26,3 +26,14 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['created_at']
+
+
+class Comment(models.Model):
+    parent = models.ForeignKey(Post, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, auto_now_add=False)
+
+    class Meta:
+        ordering = ['created_at']
