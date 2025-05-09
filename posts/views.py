@@ -10,6 +10,12 @@ from .serializers import (
 )
 from django.shortcuts import get_object_or_404
 
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
+from .permissions import IsOwnerOrReadOnly
+
 
 class CreatePostAPIView(CreateAPIView):
     """
@@ -18,7 +24,9 @@ class CreatePostAPIView(CreateAPIView):
 
         parameters: [title, body, description, image]
     """
-
+    permission_classes = [
+        IsAuthenticated,
+    ]
     serializer_class = PostCreateUpdateSerializer
 
     def post(self, request, *args, **kwargs):
@@ -35,7 +43,7 @@ class ListPostAPIView(ListAPIView):
     get:
         Returns a list of all existing posts
     """
-
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Post.objects.all()
     serializer_class = PostListSerializer
 
@@ -55,7 +63,7 @@ class DetailPostAPIView(RetrieveUpdateDestroyAPIView):
 
         parameters = [slug]
     """
-
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     queryset = Post.objects.all()
     lookup_field = "slug"
     serializer_class = PostDetailSerializer
@@ -66,7 +74,7 @@ class ListCommentAPIView(CreateAPIView):
     get:
         Returns the list of comments on a particular post
     """
-
+    permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
 
@@ -85,7 +93,7 @@ class CreateCommentAPIView(CreateAPIView):
         parameters: [slug, body]
 
     """
-
+    permission_classes = [IsAuthenticated]
     serializer_class = CommentCreateUpdateSerializer
 
     def post(self, request, *args, **kwargs):
@@ -114,8 +122,7 @@ class DetailCommentAPIView(RetrieveUpdateDestroyAPIView):
         parameters: [parent, author, body]
     """
 
-    # permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     queryset = Comment.objects.all()
     lookup_fields = ["parent", "id"]
     serializer_class = CommentCreateUpdateSerializer
